@@ -4,6 +4,8 @@
 
 > 网络爬虫是一种按照一定的规则，自动地抓取网络信息的程序或者脚本
 
+项目GitHub地址[web_crawler](https://github.com/web-songsong/web_crawler_node)
+
 ## 目标
 
 * 了解爬虫的本质
@@ -70,4 +72,10 @@
    )
    ```
 
-   >  如果有哪里不懂可以评论留言
+3. 运行
+
+   ```bash
+   node index.js
+   ```
+
+   > 如果有哪里不懂可以评论留言
