@@ -49,7 +49,7 @@ async function get_write(list, filePath = 'data.txt') {
     3,
     (item, callback) => {
       setTimeout(() => {
-        downloadNovel(item).then(str => {
+        downloadNovel(config.local,item).then(str => {
           callback(null, str)
         })
       }, Math.random * 1000)
