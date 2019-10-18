@@ -42,17 +42,15 @@ ${body}
 
 
 /*读取列表数据，进行获取， 写入操作*/
-async function get_write(list, filePath = 'data.txt') {
+async function get_write(list, local, filePath = 'data.txt') {
   const ws = fs.createWriteStream(filePath)
   mapLimit(
     list,
-    3,
+    10,
     (item, callback) => {
-      setTimeout(() => {
-        downloadNovel(config.local,item).then(str => {
-          callback(null, str)
-        })
-      }, Math.random * 1000)
+      downloadNovel(local, item).then(str => {
+        callback(null, str)
+      })
     },
     (err, allData) => {
       if (err) throwerr
@@ -66,10 +64,12 @@ async function get_write(list, filePath = 'data.txt') {
   )
 }
 
+
+/*运行*/
 async function start() {
-  let list = await get_list_info(config.url)
-  // console.log(await downloadNovel(config.local, list[0]))
-  get_write(list)
+  const {url, local} = config
+  let list = await get_list_info(url)
+  await get_write(list, local)
 }
 
 start()
