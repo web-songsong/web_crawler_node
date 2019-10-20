@@ -1,4 +1,3 @@
-const config = require('./config')
 const superagent = require('superagent')
 const cheerio = require('cheerio')
 const fs = require('fs')
@@ -7,31 +6,38 @@ const {mapLimit} = require('async')
 /*获取列表列表信息*/
 async function get_list_info(url) {
   const novel_list = []
-  return await superagent.get(url).then(res => {
+  return superagent.get(url).then(res => {
     const $ = cheerio.load(res.text)
-    $('.box_con #list dt').eq(1).nextAll().each((key, val) => {
-      let link_a = $(val).find('a')
-      novel_list.push({
-        title: link_a.text(),
-        href: link_a.attr('href')
-      })
+    $('.box_con #list  dl>dt').each((key, tagVal) => {
+      if (
+        $(tagVal)
+          .text()
+          .includes('正文')
+      ) {
+        $(tagVal)
+          .nextAll('dd')
+          .each((key, val) => {
+            let link_a = $(val).find('a')
+            novel_list.push({
+              title: link_a.text(),
+              href: link_a.attr('href')
+            })
+          })
+      }
+
     })
     return novel_list
   })
 }
 
-
 /*解析结构*/
 async function downloadNovel(local, {href, title}) {
-  console.log('ok---', title)
-  return await superagent.get(local + href).then(res => {
+  console.log('~~~~当前解析~~~~~: ', title)
+  let url = local + href
+  console.log(url)
+  return superagent.get(url).then(res => {
     const $ = cheerio.load(res.text, {decodeEntities: false})
-    let body = $('.content_read #content')
-      .html()
-      .trim()
-      .split(/<br>|\n/g)
-      .slice(1, -4)
-      .join('\r\n')
+    let body = $('.content_read #content').html().trim().split(/<br>|\n/g).slice(1, -4).join('\r\n')
     return `
 ${title}
 
@@ -40,36 +46,32 @@ ${body}
   })
 }
 
-
 /*读取列表数据，进行获取， 写入操作*/
-async function get_write(list, local, filePath = 'data.txt') {
-  const ws = fs.createWriteStream(filePath)
+async function get_write(list, local, filePath = './', file_name = 'novel.txt') {
+  const ws = fs.createWriteStream(filePath + file_name)
   mapLimit(
     list,
     10,
-    (item, callback) => {
-      downloadNovel(local, item).then(str => {
-        callback(null, str)
-      })
+    async (item) => {
+      return await downloadNovel(local, item)
     },
-    (err, allData) => {
-      if (err) throwerr
-      console.log('ws')
-      allData.forEach(text => {
-        ws.write(text)
-      })
-      console.log('ok')
+    (err, results) => {
+      if (err) throw err
+      console.log('开始写入')
+      results.forEach(text => ws.write(text))
       ws.end()
+      console.log('写入完成')
     }
   )
 }
 
-
 /*运行*/
-async function start() {
-  const {url, local} = config
+async function start(config, callBack) {
+  const {url, local, novel_path, file_name} = config
   let list = await get_list_info(url)
-  await get_write(list, local)
+  await get_write(list, local, novel_path, file_name)
+  callBack && callBack()
 }
 
-start()
+const config = require('./config')
+start(config)
