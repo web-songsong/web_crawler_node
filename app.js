@@ -69,7 +69,7 @@ async function get_write(list, local, filePath = './', file_name = 'novel.txt') 
 async function start(config, callBack) {
   const {url, local, novel_path, file_name} = config
   let list = await get_list_info(url)
-  await get_write(list, local, novel_path, file_name)
+  get_write(list.slice, local, novel_path, file_name)
   callBack && callBack()
 }
 
