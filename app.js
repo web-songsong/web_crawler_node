@@ -5,21 +5,24 @@ const fs = require('fs')
 const {mapLimit} = require('async')
 
 /*获取列表列表信息*/
-async function get_list_info(url) {
+async function get_list_info(url, keyword = '正文') {
   const novel_list = []
   return superagent.get(url).then(res => {
     const $ = cheerio.load(res.text)
-    $('.box_con #list dt').eq(1).nextAll().each((key, val) => {
-      let link_a = $(val).find('a')
-      novel_list.push({
-        title: link_a.text(),
-        href: link_a.attr('href')
-      })
+    $('.box_con #list  dl>dt').each((key, tagVal) => {
+      if ($(tagVal).text().includes(keyword)) {
+        $(tagVal).nextAll('dd').each((key, val) => {
+          let link_a = $(val).find('a')
+          novel_list.push({
+            title: link_a.text(),
+            href: link_a.attr('href')
+          })
+        })
+      }
     })
     return novel_list
   })
 }
-
 
 /*解析结构*/
 async function downloadNovel(local, {href, title}) {
@@ -39,7 +42,6 @@ ${body}
     `
   })
 }
-
 
 /*读取列表数据，进行获取， 写入操作*/
 async function get_write(list, local, filePath = 'data.txt') {
@@ -63,7 +65,6 @@ async function get_write(list, local, filePath = 'data.txt') {
     }
   )
 }
-
 
 /*运行*/
 async function start() {
